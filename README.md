@@ -5,6 +5,7 @@ Multilingual Mandi is a **voice-first, farmer-friendly Generative AI platform** 
 The platform is built using **Kiro** as part of the *Multilingual Mandi / AI for Bharat* challenge and focuses on **inclusion, simplicity, and real-world usability for Indian farmers and small vendors**.
 
 ---
+<img width="1024" height="1536" alt="image" src="https://github.com/user-attachments/assets/9ae7e9dc-7243-4d82-b523-47ae3e740b49" />
 
 ## 🧩 Problem Statement
 
