@@ -1,147 +1,486 @@
-# Implementation Plan: Multilingual Mandi Platform
+# Implementation Tasks - Multilingual Mandi MVP
 
 ## Overview
 
-This implementation focuses on creating a farmer-first, voice-first web application with core features: multilingual voice interaction, simple AI-driven price discovery, polite negotiation assistance, and a hariyali (green paddy-inspired) adaptive UI with no-login-first-use experience.
+This task list breaks down the implementation of a voice-first multilingual platform for mandi price discovery and negotiation.
 
-## Tasks
+## Task Breakdown
 
-- [x] 1. Set up project foundation and voice interface
-  - Create React TypeScript project with PWA configuration
-  - Set up Material-UI with custom hariyali (green) theme
-  - Implement Web Speech API integration for voice input/output
-  - Configure local storage for no-login session management
-  - _Requirements: 6.1, 6.2, 6.4, 6.5_
+### Phase 1: Core Infrastructure & Sample Data
 
-- [-] 1.1 Write property test for voice interface
-  - **Property 14: Performance Under Network Constraints**
-  - **Validates: Requirements 6.3, 6.4**
+#### Task 1.1: Setup Sample Price Dataset
+- [ ] Create `src/data/samplePrices.ts` with mock commodity prices
+- [ ] Include 8-10 common commodities (onion, tomato, potato, wheat, rice, cotton, sugarcane, pulses)
+- [ ] Add price, unit, market name, timestamp, trend data
+- [ ] Include commodity icons (emojis)
+- [ ] Add multilingual names (English + Hindi minimum)
 
-- [ ] 2. Implement core translation service
-  - [~] 2.1 Create translation service with Google Translate API integration
-    - Implement translation functions for 10+ Indian languages
-    - Add confidence scoring and commercial term preservation
-    - Create translation caching mechanism using local storage
-    - _Requirements: 1.1, 1.2, 1.3_
-  
-  - [~] 2.2 Write property test for translation performance and quality
-    - **Property 1: Translation Performance and Quality**
-    - **Validates: Requirements 1.1, 1.2, 1.5**
-  
-  - [~] 2.3 Implement UI localization system
-    - Create language selection interface
-    - Implement dynamic UI text translation
-    - Add cultural context preservation for Indian languages
-    - _Requirements: 1.4_
-  
-  - [~] 2.4 Write property test for UI localization
-    - **Property 2: UI Localization Consistency**
-    - **Validates: Requirements 1.4**
+**Acceptance Criteria:**
+- Dataset includes at least 8 commodities
+- Each commodity has: name, price, unit, market, timestamp, trend
+- Data structure matches `CommodityPrice` interface from design
 
-- [ ] 3. Checkpoint - Test voice and translation features
-  - Ensure all tests pass, ask the user if questions arise.
+#### Task 1.2: Create Price Discovery Service
+- [ ] Create `src/services/PriceDiscoveryService.ts`
+- [ ] Implement `getPrice(commodityName: string)` function
+- [ ] Implement `searchCommodity(query: string)` with fuzzy matching
+- [ ] Implement `getAllCommodities()` function
+- [ ] Add commodity name normalization (handle variations like "onion"/"onions"/"pyaz")
 
-- [ ] 4. Build simple price discovery system
-  - [~] 4.1 Create basic market data service
-    - Implement simple commodity price lookup
-    - Add basic market trend analysis
-    - Create price recommendation algorithms
-    - _Requirements: 2.1, 2.2, 2.3, 4.1_
-  
-  - [~] 4.2 Write property test for price discovery
-    - **Property 3: Price Discovery Performance and Accuracy**
-    - **Validates: Requirements 2.1, 2.2, 2.3**
-  
-  - [~] 4.3 Implement market data display
-    - Create commodity search interface
-    - Add real-time price display with auto-refresh
-    - Implement basic historical price charts
-    - _Requirements: 4.2, 4.3, 4.4_
-  
-  - [~] 4.4 Write property test for market data freshness
-    - **Property 4: Market Data Freshness**
-    - **Validates: Requirements 2.4, 4.2**
+**Acceptance Criteria:**
+- Service returns correct price for exact commodity name
+- Fuzzy search handles spelling variations
+- Returns null for non-existent commodities
+- Case-insensitive search
 
-- [ ] 5. Create polite negotiation assistant
-  - [~] 5.1 Implement basic negotiation interface
-    - Create negotiation session management
-    - Add simple offer/counter-offer system
-    - Implement polite response templates
-    - _Requirements: 3.1, 3.2, 3.3_
-  
-  - [~] 5.2 Write property test for negotiation assistance
-    - **Property 6: Negotiation AI Assistance**
-    - **Validates: Requirements 3.1, 3.2, 3.3, 3.5**
-  
-  - [~] 5.3 Add basic transaction recording
-    - Implement simple transaction logging
-    - Create basic trade completion flow
-    - Add transaction history view
-    - _Requirements: 7.1_
-  
-  - [~] 5.4 Write property test for transaction recording
-    - **Property 16: Transaction Recording Completeness**
-    - **Validates: Requirements 7.1**
+#### Task 1.3: Write Property-Based Tests for Price Service
+- [ ] Create `src/tests/PriceDiscovery.property.test.ts`
+- [ ] Property: All prices are positive numbers
+- [ ] Property: All commodities have valid units ('kg' or 'quintal')
+- [ ] Property: Search is case-insensitive
+- [ ] Property: Fuzzy search returns most relevant match
 
-- [ ] 6. Enhance responsive design and mobile optimization
-  - [ ] 6.1 Improve responsive layout system
-    - Enhance mobile-first responsive design for better usability
-    - Optimize touch controls for various screen sizes
-    - Add better mobile navigation patterns
-    - _Requirements: 6.1, 6.2_
-  
-  - [~] 6.2 Write property test for responsive design
-    - **Property 13: Responsive Design Compatibility**
-    - **Validates: Requirements 6.1, 6.2**
-  
-  - [ ] 6.3 Enhance offline functionality
-    - Improve service worker for better offline capability
-    - Add comprehensive offline data caching
-    - Create better offline mode indicators and user feedback
-    - _Requirements: 6.5_
-  
-  - [~] 6.4 Write property test for offline functionality
-    - **Property 15: Offline Functionality**
-    - **Validates: Requirements 6.5**
+**Acceptance Criteria:**
+- All property tests pass
+- Tests use fast-check library
+- Tests validate data integrity
 
-- [ ] 7. Integrate voice-first user experience with new features
-  - [ ] 7.1 Connect voice interface to translation and price discovery
-    - Enable voice commands for commodity search with translation
-    - Add voice-guided price discovery with multilingual support
-    - Implement voice-based negotiation assistance
-    - _Requirements: 6.4, 1.1, 2.1_
-  
-  - [ ] 7.2 Enhance hariyali adaptive UI
-    - Improve green paddy-inspired design elements
-    - Add better cultural design elements for Indian farmers
-    - Enhance navigation for low-literacy users
-    - _Requirements: 6.1, 6.2_
-  
-  - [~] 7.3 Write integration tests for voice features
-    - Test voice command recognition accuracy across languages
-    - Verify voice-guided workflows with translation
-    - Test multilingual voice interaction end-to-end
+### Phase 2: Voice Recognition & Speech Synthesis
 
-- [ ] 8. Final integration and testing
-  - [~] 8.1 Wire all components together
-    - Connect translation service to voice interface
-    - Integrate price discovery with negotiation assistant
-    - Ensure seamless data flow between all components
-    - _Requirements: All core requirements_
-  
-  - [~] 8.2 Write end-to-end integration tests
-    - Test complete farmer workflow from voice input to transaction
-    - Verify multilingual trading scenarios
-    - Test offline-to-online synchronization
+#### Task 2.1: Create Voice Recognition Hook
+- [ ] Create `src/hooks/useVoiceRecognition.ts`
+- [ ] Implement Web Speech API wrapper
+- [ ] Handle browser compatibility checks
+- [ ] Return: `{ transcript, isListening, error, startListening, stopListening }`
+- [ ] Add language support for Hindi and English initially
 
-- [ ] 9. Final checkpoint - Complete system validation
-  - Ensure all tests pass, ask the user if questions arise.
+**Acceptance Criteria:**
+- Hook starts/stops voice recognition
+- Returns transcript when speech detected
+- Handles errors gracefully (browser not supported, no microphone)
+- Works in Chrome and Safari
 
-## Notes
+#### Task 2.2: Create Speech Synthesis Hook
+- [ ] Create `src/hooks/useSpeechSynthesis.ts`
+- [ ] Implement Web Speech API text-to-speech
+- [ ] Support language selection (Hindi, English)
+- [ ] Return: `{ speak, isSpeaking, cancel }`
+- [ ] Add voice rate and pitch controls
 
-- All tasks are required for comprehensive implementation from start
-- Focus on farmer-first, voice-first experience throughout implementation
-- Prioritize simplicity and usability over complex features
-- Each task references specific requirements for traceability
-- Property tests validate universal correctness properties
-- Integration tests ensure seamless user experience across language barriers
+**Acceptance Criteria:**
+- Hook speaks provided text in selected language
+- Can cancel ongoing speech
+- Handles language switching
+- Works in Chrome and Safari
+
+#### Task 2.3: Write Property-Based Tests for Voice Hooks
+- [ ] Create `src/tests/VoiceInterface.property.test.ts`
+- [ ] Property: Voice recognition returns non-empty transcript
+- [ ] Property: Speech synthesis accepts any valid string
+- [ ] Property: Language codes are valid
+- [ ] Mock Web Speech API for testing
+
+**Acceptance Criteria:**
+- Tests pass without requiring actual microphone
+- Tests validate hook behavior
+- Mocks handle edge cases
+
+### Phase 3: UI Components
+
+#### Task 3.1: Create Voice Mic Button Component
+- [ ] Create `src/components/VoiceMicButton.tsx`
+- [ ] Large circular button (120px diameter)
+- [ ] Pulsing animation when listening
+- [ ] Visual states: idle, listening, processing, error
+- [ ] Haptic feedback on tap (if supported)
+
+**Acceptance Criteria:**
+- Button is 120px diameter on mobile
+- Shows pulsing animation when active
+- Changes color based on state (green idle, red listening)
+- Accessible with ARIA labels
+
+#### Task 3.2: Create Price Card Component
+- [ ] Create `src/components/PriceCard.tsx`
+- [ ] Display commodity icon, name, price
+- [ ] Show market name and timestamp
+- [ ] Display trend indicator (up/down arrow)
+- [ ] Responsive design (mobile-first)
+
+**Acceptance Criteria:**
+- Card displays all price information clearly
+- Large font for price (48px)
+- Trend arrow shows correct direction
+- Works on 320px+ screens
+
+#### Task 3.3: Create Language Selector Component
+- [ ] Create `src/components/LanguageSelector.tsx`
+- [ ] Dropdown or modal with 10 Indian languages
+- [ ] Show language names in native script
+- [ ] Save selection to localStorage
+- [ ] Update UI immediately on change
+
+**Acceptance Criteria:**
+- All 10 languages listed (Hindi, English, Tamil, Telugu, Bengali, Marathi, Gujarati, Kannada, Malayalam, Punjabi)
+- Selection persists across sessions
+- UI updates without page reload
+
+#### Task 3.4: Create Header Component
+- [ ] Create `src/components/Header.tsx`
+- [ ] App name/logo on left
+- [ ] Language selector on right
+- [ ] Back button (conditional, based on route)
+- [ ] Hariyali green theme colors
+
+**Acceptance Criteria:**
+- Header is sticky at top
+- Language selector accessible
+- Back button navigates correctly
+- Responsive on all screen sizes
+
+### Phase 4: Home Screen Implementation
+
+#### Task 4.1: Create Home Screen Component
+- [ ] Create `src/screens/HomeScreen.tsx`
+- [ ] Large centered mic button
+- [ ] Collapsible text input field
+- [ ] Three quick action buttons (Price, Chat, Help)
+- [ ] Recent queries list (optional)
+
+**Acceptance Criteria:**
+- Mic button is prominently centered
+- Text input expands when tapped
+- Quick actions navigate to correct screens
+- Layout matches design mockup
+
+#### Task 4.2: Implement Voice Query Processing
+- [ ] Add voice recognition to home screen
+- [ ] Parse transcript to extract commodity name
+- [ ] Handle commands: "price", "check", "what is"
+- [ ] Call PriceDiscoveryService with extracted commodity
+- [ ] Navigate to result screen with data
+
+**Acceptance Criteria:**
+- Recognizes queries like "onion price", "check tomato price"
+- Extracts commodity name correctly
+- Handles variations in phrasing
+- Shows error for unrecognized commodities
+
+#### Task 4.3: Implement Text Query Processing
+- [ ] Add text input field to home screen
+- [ ] Parse text input to extract commodity
+- [ ] Same processing logic as voice
+- [ ] Submit on Enter key or button tap
+
+**Acceptance Criteria:**
+- Text input works as alternative to voice
+- Same parsing logic as voice queries
+- Keyboard appears on mobile
+- Submit button clearly visible
+
+#### Task 4.4: Write Unit Tests for Home Screen
+- [ ] Create `src/tests/HomeScreen.test.tsx`
+- [ ] Test mic button click starts voice recognition
+- [ ] Test text input submission
+- [ ] Test commodity extraction from queries
+- [ ] Test navigation to result screen
+
+**Acceptance Criteria:**
+- All unit tests pass
+- Tests cover main user flows
+- Mocks for voice recognition
+
+### Phase 5: Price Result Screen Implementation
+
+#### Task 5.1: Create Price Result Screen Component
+- [ ] Create `src/screens/PriceResultScreen.tsx`
+- [ ] Display commodity price using PriceCard
+- [ ] Show market location and timestamp
+- [ ] Add trend indicator
+- [ ] Include "Ask Again" button
+- [ ] Add "Start Negotiation" button
+
+**Acceptance Criteria:**
+- Screen displays all price information
+- Back button returns to home
+- Buttons are large and tappable
+- Layout matches design mockup
+
+#### Task 5.2: Implement Text-to-Speech for Results
+- [ ] Add automatic speech on screen load
+- [ ] Speak: "Commodity name, price per unit, market name"
+- [ ] Add "Speak" button to repeat
+- [ ] Use selected language for speech
+
+**Acceptance Criteria:**
+- Result is spoken automatically when screen loads
+- Speech is in user's selected language
+- Can replay speech by tapping button
+- Speech is clear and conversational
+
+#### Task 5.3: Add Related Commodities Section
+- [ ] Show 2-3 similar commodities with prices
+- [ ] Make them tappable to view their details
+- [ ] Use simple similarity logic (same category)
+
+**Acceptance Criteria:**
+- Shows relevant related commodities
+- Tapping navigates to that commodity's result
+- At least 2 related items shown
+
+#### Task 5.4: Write Unit Tests for Result Screen
+- [ ] Create `src/tests/PriceResultScreen.test.tsx`
+- [ ] Test price display
+- [ ] Test text-to-speech trigger
+- [ ] Test navigation buttons
+- [ ] Test related commodities
+
+**Acceptance Criteria:**
+- All unit tests pass
+- Tests cover main interactions
+- Mocks for speech synthesis
+
+### Phase 6: Localization & Translation
+
+#### Task 6.1: Create Localization Service
+- [ ] Create `src/services/LocalizationService.ts`
+- [ ] Add UI text translations for 10 languages
+- [ ] Implement `getText(key: string)` function
+- [ ] Add language switching logic
+- [ ] Store preference in localStorage
+
+**Acceptance Criteria:**
+- Service provides translations for all UI text
+- Supports all 10 languages
+- Language preference persists
+- Fallback to English if translation missing
+
+#### Task 6.2: Create Translation Hook
+- [ ] Create `src/hooks/useLocalization.ts`
+- [ ] Wrap LocalizationService in React hook
+- [ ] Return: `{ t, currentLanguage, changeLanguage }`
+- [ ] Trigger re-render on language change
+
+**Acceptance Criteria:**
+- Hook provides translation function
+- Components re-render on language change
+- Easy to use in any component
+
+#### Task 6.3: Apply Translations to All Components
+- [ ] Update HomeScreen with translations
+- [ ] Update PriceResultScreen with translations
+- [ ] Update Header with translations
+- [ ] Update all buttons and labels
+
+**Acceptance Criteria:**
+- All UI text uses translation keys
+- No hardcoded English text
+- UI updates immediately on language change
+
+#### Task 6.4: Write Property-Based Tests for Localization
+- [ ] Create `src/tests/Localization.property.test.ts`
+- [ ] Property: All translation keys return non-empty strings
+- [ ] Property: Language switching preserves app state
+- [ ] Property: All languages have same set of keys
+
+**Acceptance Criteria:**
+- Tests validate translation completeness
+- Tests check for missing translations
+- All property tests pass
+
+### Phase 7: Styling & Theme
+
+#### Task 7.1: Create Hariyali Theme
+- [ ] Create `src/theme/hariyaliTheme.ts`
+- [ ] Define color palette (greens, oranges)
+- [ ] Set typography (large fonts for readability)
+- [ ] Configure MUI theme
+- [ ] Add responsive breakpoints
+
+**Acceptance Criteria:**
+- Theme uses green as primary color (#4CAF50)
+- High contrast for outdoor visibility
+- Large font sizes (18px+ body text)
+- Matches design color palette
+
+#### Task 7.2: Style Home Screen
+- [ ] Apply hariyali theme colors
+- [ ] Large touch targets (48px minimum)
+- [ ] Proper spacing and padding
+- [ ] Responsive layout (320px+)
+
+**Acceptance Criteria:**
+- Screen matches design mockup
+- All interactive elements are 48px+
+- Works on small phones (320px)
+- Green theme applied consistently
+
+#### Task 7.3: Style Price Result Screen
+- [ ] Apply theme colors
+- [ ] Large price display (48px font)
+- [ ] Card-based layout
+- [ ] Responsive design
+
+**Acceptance Criteria:**
+- Screen matches design mockup
+- Price is prominently displayed
+- Cards have proper shadows/borders
+- Responsive on all screen sizes
+
+#### Task 7.4: Add Loading and Error States
+- [ ] Create loading spinner component
+- [ ] Create error message component
+- [ ] Add loading state to voice recognition
+- [ ] Add error handling for failed queries
+
+**Acceptance Criteria:**
+- Loading spinner shows during processing
+- Error messages are clear and helpful
+- Errors don't crash the app
+- User can retry after error
+
+### Phase 8: Integration & Testing
+
+#### Task 8.1: Integrate All Components
+- [ ] Update `src/App.tsx` with routing
+- [ ] Connect HomeScreen to PriceResultScreen
+- [ ] Add language provider at app level
+- [ ] Add voice provider at app level
+
+**Acceptance Criteria:**
+- Navigation works between screens
+- Language persists across screens
+- Voice state is managed globally
+- No prop drilling
+
+#### Task 8.2: End-to-End Testing
+- [ ] Test complete flow: voice query → result → speech
+- [ ] Test complete flow: text query → result → speech
+- [ ] Test language switching during flow
+- [ ] Test on mobile device (real or emulator)
+
+**Acceptance Criteria:**
+- Complete user flows work without errors
+- Voice recognition works on mobile
+- Text-to-speech works on mobile
+- Language switching doesn't break flow
+
+#### Task 8.3: Performance Optimization
+- [ ] Lazy load screens
+- [ ] Optimize voice recognition startup time
+- [ ] Minimize bundle size
+- [ ] Add service worker for offline (optional)
+
+**Acceptance Criteria:**
+- Initial load < 3 seconds on 3G
+- Voice recognition starts < 500ms
+- Bundle size < 500KB (gzipped)
+
+#### Task 8.4: Browser Compatibility Testing
+- [ ] Test on Chrome Android
+- [ ] Test on Safari iOS
+- [ ] Test on Firefox Android
+- [ ] Add fallbacks for unsupported features
+
+**Acceptance Criteria:**
+- Works on Chrome 80+
+- Works on Safari 14+
+- Graceful degradation if voice not supported
+- Clear error messages for unsupported browsers
+
+### Phase 9: Documentation & Demo Preparation
+
+#### Task 9.1: Create README
+- [ ] Add project description
+- [ ] Add setup instructions
+- [ ] Add demo instructions
+- [ ] List supported languages and commodities
+
+**Acceptance Criteria:**
+- README is clear and complete
+- Anyone can run the project
+- Demo scenarios documented
+
+#### Task 9.2: Prepare Demo Script
+- [ ] Write demo scenarios
+- [ ] Test voice commands in Hindi and English
+- [ ] Prepare sample queries
+- [ ] Document edge cases
+
+**Acceptance Criteria:**
+- Demo script covers main features
+- Queries work reliably
+- Edge cases handled gracefully
+
+#### Task 9.3: Create Demo Video/Screenshots
+- [ ] Record demo video (optional)
+- [ ] Take screenshots of all screens
+- [ ] Show voice interaction
+- [ ] Show language switching
+
+**Acceptance Criteria:**
+- Visual documentation of features
+- Shows voice-first interaction
+- Demonstrates multilingual support
+
+## Task Dependencies
+
+```
+Phase 1 (Data & Services)
+  ↓
+Phase 2 (Voice Hooks)
+  ↓
+Phase 3 (UI Components)
+  ↓
+Phase 4 (Home Screen) ← Phase 6 (Localization)
+  ↓
+Phase 5 (Result Screen)
+  ↓
+Phase 7 (Styling)
+  ↓
+Phase 8 (Integration)
+  ↓
+Phase 9 (Documentation)
+```
+
+## Priority Order
+
+**High Priority (MVP Core):**
+- Task 1.1, 1.2: Sample data and price service
+- Task 2.1, 2.2: Voice recognition and speech synthesis
+- Task 4.1, 4.2, 4.3: Home screen with voice/text input
+- Task 5.1, 5.2: Price result screen with speech
+- Task 7.1, 7.2, 7.3: Basic styling
+
+**Medium Priority (Polish):**
+- Task 3.1, 3.2, 3.3: Reusable components
+- Task 6.1, 6.2, 6.3: Full localization
+- Task 7.4: Loading and error states
+- Task 8.1, 8.2: Integration testing
+
+**Low Priority (Nice-to-Have):**
+- Task 1.3, 2.3, 4.4, 5.4, 6.4: Property-based tests
+- Task 5.3: Related commodities
+- Task 8.3: Performance optimization
+- Task 9.1, 9.2, 9.3: Documentation
+
+## Estimated Timeline
+
+- **Phase 1-2**: 2-3 hours (Core services and voice)
+- **Phase 3-5**: 3-4 hours (UI components and screens)
+- **Phase 6-7**: 2-3 hours (Localization and styling)
+- **Phase 8-9**: 2-3 hours (Integration and polish)
+
+**Total**: 9-13 hours for complete MVP
+
+## Success Criteria
+
+The MVP is complete when:
+1. ✅ User can ask for commodity prices using voice (Hindi/English)
+2. ✅ User can type commodity queries as alternative
+3. ✅ System detects commodity name from query
+4. ✅ System returns price from sample dataset
+5. ✅ System speaks the result conversationally
+6. ✅ UI is mobile-friendly with large buttons
+7. ✅ Hariyali green theme applied throughout
+8. ✅ Works on Chrome and Safari mobile browsers

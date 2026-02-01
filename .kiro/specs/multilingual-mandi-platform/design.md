@@ -1,497 +1,640 @@
-# Design Document: Multilingual Mandi Platform
+# Design Document - Multilingual Mandi (Hackathon MVP)
 
-## Overview
+## Introduction
 
-The Multilingual Mandi Platform is a farmer-first, voice-first web application that creates a real-time linguistic bridge for local trade in India. The platform focuses on core features: multilingual voice interaction, simple AI-driven price discovery, polite negotiation assistance, and a hariyali (green paddy-inspired) adaptive UI with no-login-first-use experience.
+This document describes the technical design for a voice-first, mobile-friendly web application that enables multilingual communication and AI-assisted trading for Indian market vendors.
 
-The system prioritizes usability, inclusion, and real-world adoption for Indian local markets, implementing only the essential features needed for farmers to trade effectively across language barriers.
+## Design Principles
 
-## Architecture
+1. **Voice-First**: Primary interaction through speech, with text as fallback
+2. **Low-Literacy Friendly**: Icons, colors, and minimal text
+3. **Mobile-First**: Optimized for smartphones (320px+)
+4. **Hariyali Theme**: Green agricultural colors, high contrast
+5. **Simple Navigation**: Maximum 4 screens, clear purpose for each
 
-### High-Level Architecture
+## Technology Stack
 
-```mermaid
-graph TB
-    subgraph "Client Layer"
-        WEB[Web Application - PWA]
-        VOICE[Voice Interface]
-    end
-    
-    subgraph "Core Services"
-        TRANSLATION[Translation Service]
-        PRICE[Simple Price Discovery]
-        NEGOTIATION[Polite Negotiation Assistant]
-        SESSION[Session Management]
-    end
-    
-    subgraph "AI Services"
-        VOICE_AI[Speech-to-Text/Text-to-Speech]
-        TRANSLATE_AI[Translation Engine]
-        PRICE_AI[Basic Price Suggestions]
-    end
-    
-    subgraph "Data Layer"
-        CACHE[(Local Storage + Cache)]
-        MARKET_DATA[(Simple Market Data)]
-    end
-    
-    subgraph "External APIs"
-        SPEECH_API[Speech Recognition API]
-        TRANSLATION_API[Translation API]
-        BASIC_MARKET[Basic Market Data]
-    end
-    
-    WEB --> VOICE
-    VOICE --> TRANSLATION
-    VOICE --> PRICE
-    VOICE --> NEGOTIATION
-    
-    TRANSLATION --> TRANSLATE_AI
-    PRICE --> PRICE_AI
-    
-    TRANSLATE_AI --> TRANSLATION_API
-    VOICE_AI --> SPEECH_API
-    PRICE_AI --> BASIC_MARKET
-    
-    TRANSLATION --> CACHE
-    PRICE --> MARKET_DATA
-    SESSION --> CACHE
+### Frontend
+- **Framework**: React 18.2 with TypeScript
+- **UI Library**: Material-UI (MUI) v5.15
+- **Styling**: Emotion (CSS-in-JS)
+- **State Management**: React hooks (useState, useContext)
+
+### Voice & Translation
+- **Speech Recognition**: Web Speech API (browser native)
+- **Text-to-Speech**: Web Speech API (browser native)
+- **Translation**: @google-cloud/translate v9.3 (or mock for demo)
+
+### Data & Storage
+- **Price Data**: Mock/sample data in JSON format
+- **Storage**: Browser localStorage for preferences
+- **No Backend**: Pure frontend application for MVP
+
+## Color Palette (Hariyali Theme)
+
+```typescript
+// Primary Colors
+primary: {
+  main: '#4CAF50',      // Vibrant green (main actions)
+  light: '#81C784',     // Light green (hover states)
+  dark: '#388E3C',      // Dark green (pressed states)
+}
+
+// Secondary Colors
+secondary: {
+  main: '#FFA726',      // Orange (alerts, warnings)
+  light: '#FFB74D',
+  dark: '#F57C00',
+}
+
+// Background
+background: {
+  default: '#F1F8E9',   // Very light green
+  paper: '#FFFFFF',     // White cards
+}
+
+// Text
+text: {
+  primary: '#1B5E20',   // Dark green (high contrast)
+  secondary: '#558B2F', // Medium green
+}
+
+// Status Colors
+success: '#66BB6A',     // Green
+warning: '#FFA726',     // Orange
+error: '#EF5350',       // Red
+info: '#42A5F5',        // Blue
 ```
 
-### Technology Stack
+## Screen Designs
 
-**Frontend:**
-- React.js with TypeScript for the web interface
-- Web Speech API for voice recognition and synthesis
-- Material-UI with custom hariyali (green) theme
-- Progressive Web App (PWA) for mobile optimization
-- Local Storage for no-login session management
+### 1. Home Screen (Voice Assistant)
 
-**Backend Services:**
-- Node.js with Express.js for lightweight API services
-- Simple REST APIs (no complex microservices)
-- In-memory caching for session data
+**Purpose**: Main entry point, voice-first interaction
 
-**AI/ML Components:**
-- Web Speech API for voice input/output
-- Google Translate API for Indian language support
-- Simple price suggestion algorithms (no complex ML initially)
-- Basic negotiation response templates
-
-**Infrastructure:**
-- Single server deployment initially
-- Local storage for offline capability
-- Simple CDN for static assets
-
-## Components and Interfaces
-
-### 1. Translation Service
-
-**Purpose:** Provides real-time multilingual communication capabilities
-
-**Key Components:**
-- `TranslationEngine`: Core translation logic with confidence scoring
-- `LanguageDetector`: Automatic language detection for incoming messages
-- `ContextPreserver`: Maintains commercial terminology and pricing context
-- `TranslationCache`: Redis-based caching for frequently translated phrases
-
-**Interfaces:**
-```typescript
-interface TranslationService {
-  translateMessage(text: string, fromLang: string, toLang: string): Promise<TranslationResult>
-  detectLanguage(text: string): Promise<LanguageDetection>
-  getConfidenceScore(translation: TranslationResult): number
-  cacheTranslation(key: string, translation: TranslationResult): void
-}
-
-interface TranslationResult {
-  translatedText: string
-  confidence: number
-  originalText: string
-  fromLanguage: string
-  toLanguage: string
-  preservedTerms: string[]
-}
+**Layout**:
+```
+┌─────────────────────────────────┐
+│  🌾 Mandi Platform    [🌐 हिं]  │ ← Header (language selector)
+├─────────────────────────────────┤
+│                                 │
+│     "Tap mic and speak"         │ ← Instruction text
+│                                 │
+│         ┌─────────┐             │
+│         │         │             │
+│         │   🎤    │             │ ← Large circular mic button
+│         │         │             │   (120px diameter, pulsing when active)
+│         └─────────┘             │
+│                                 │
+│    "या टाइप करें..."            │ ← Text input (collapsible)
+│    [________________]           │
+│                                 │
+│  ┌──────┐  ┌──────┐  ┌──────┐  │
+│  │ 💰   │  │ 🤝   │  │ ❓   │  │ ← Quick action buttons
+│  │Price │  │Chat  │  │Help  │  │   (80px x 80px each)
+│  └──────┘  └──────┘  └──────┘  │
+│                                 │
+│  Recent: "Onion price?"         │ ← Recent queries (optional)
+│                                 │
+└─────────────────────────────────┘
 ```
 
-### 2. Price Discovery Service
+**Components**:
+- Header with app name and language selector
+- Large circular microphone button (primary action)
+- Visual feedback: pulsing animation when listening
+- Collapsible text input field
+- Three large quick-action buttons
+- Recent queries list (last 3)
 
-**Purpose:** AI-driven market analysis and price recommendations
+**Interactions**:
+- Tap mic → Start voice recognition → Show "Listening..."
+- Tap again → Stop listening
+- Voice detected → Show transcript → Process command
+- Tap text field → Expand keyboard input
+- Tap quick actions → Navigate to specific screen
 
-**Key Components:**
-- `MarketDataAggregator`: Collects data from multiple Indian commodity markets
-- `PricePredictionEngine`: ML-based price forecasting and recommendations
-- `TrendAnalyzer`: Historical and real-time trend analysis
-- `AlertManager`: Price volatility and opportunity alerts
+### 2. Price Result Screen
 
-**Interfaces:**
-```typescript
-interface PriceDiscoveryService {
-  getPriceRecommendation(commodity: string, quantity: number, location: string): Promise<PriceRecommendation>
-  getMarketTrends(commodity: string, timeframe: string): Promise<MarketTrend[]>
-  subscribeToAlerts(vendorId: string, commodities: string[]): void
-  updateMarketData(): Promise<void>
-}
+**Purpose**: Display commodity price information
 
-interface PriceRecommendation {
-  commodity: string
-  recommendedPrice: number
-  priceRange: { min: number, max: number }
-  confidence: number
-  marketFactors: string[]
-  lastUpdated: Date
-}
+**Layout**:
+```
+┌─────────────────────────────────┐
+│  ← Back          🔊 Speak        │ ← Navigation
+├─────────────────────────────────┤
+│                                 │
+│         🧅 Onion                │ ← Commodity icon + name
+│                                 │
+│      ₹40 per kg                 │ ← Large price display
+│                                 │
+│  📍 Delhi Azadpur Mandi         │ ← Market location
+│  📅 Today, 2:30 PM              │ ← Timestamp
+│                                 │
+│  ┌─────────────────────────┐   │
+│  │  Price Trend            │   │ ← Simple trend indicator
+│  │  ↗️ +5% from yesterday   │   │
+│  └─────────────────────────┘   │
+│                                 │
+│  Similar Prices:                │
+│  • Potato: ₹30/kg               │ ← Related commodities
+│  • Tomato: ₹50/kg               │
+│                                 │
+│  ┌──────────────┐               │
+│  │ Start Negotiation 🤝 │       │ ← Action button
+│  └──────────────┘               │
+│                                 │
+│         [🎤 Ask Again]           │ ← Voice button (smaller)
+│                                 │
+└─────────────────────────────────┘
 ```
 
-### 3. Negotiation Service
+**Components**:
+- Back button and speak button in header
+- Large commodity icon (emoji or image)
+- Prominent price display (48px font)
+- Market location and timestamp
+- Simple trend indicator (up/down arrow)
+- Related commodities list
+- Action button to start negotiation
+- Smaller mic button for new query
 
-**Purpose:** AI-assisted negotiation and deal facilitation
+**Interactions**:
+- Tap "Speak" → Read entire result aloud
+- Tap "Start Negotiation" → Navigate to chat screen
+- Tap "Ask Again" → Return to home with voice active
 
-**Key Components:**
-- `NegotiationEngine`: Core negotiation logic and state management
-- `OfferAnalyzer`: Evaluates offers against market conditions
-- `StrategyRecommender`: Suggests negotiation strategies and counter-offers
-- `DealTracker`: Monitors negotiation progress and outcomes
+### 3. Negotiation Chat Screen
 
-**Interfaces:**
-```typescript
-interface NegotiationService {
-  startNegotiation(buyerId: string, sellerId: string, commodity: string): Promise<NegotiationSession>
-  analyzeOffer(sessionId: string, offer: Offer): Promise<OfferAnalysis>
-  suggestCounterOffer(sessionId: string, currentOffer: Offer): Promise<CounterOfferSuggestion>
-  finalizeNegotiation(sessionId: string, agreedTerms: Deal): Promise<CompletedDeal>
-}
+**Purpose**: Vendor-to-vendor communication with AI assistance
 
-interface NegotiationSession {
-  sessionId: string
-  participants: Participant[]
-  commodity: string
-  currentOffer: Offer | null
-  status: 'active' | 'completed' | 'cancelled'
-  history: NegotiationEvent[]
-}
+**Layout**:
+```
+┌─────────────────────────────────┐
+│  ← Back    Onion Deal    [🌐]   │ ← Header
+├─────────────────────────────────┤
+│                                 │
+│  ┌─────────────────────────┐   │
+│  │ 🤖 AI Suggestion:       │   │ ← AI assistant card
+│  │ Market price: ₹40/kg    │   │   (sticky at top)
+│  │ Suggest: Start at ₹38   │   │
+│  └─────────────────────────┘   │
+│                                 │
+│  You: "₹35 per kg?"             │ ← Your message (right)
+│  [Original: "₹35 प्रति किलो?"]  │   (with translation)
+│                                 │
+│  Vendor: "Too low, ₹42"         │ ← Their message (left)
+│  [Original: "बहुत कम, ₹42"]     │
+│                                 │
+│  🤖 Try: "₹38 is fair"          │ ← AI suggestion bubble
+│                                 │
+│  You: "₹38 final?"              │
+│                                 │
+├─────────────────────────────────┤
+│  [________________]  [🎤] [📤]  │ ← Input bar
+│   Type message...               │   (text + voice + send)
+└─────────────────────────────────┘
 ```
 
-### 4. Vendor Management Service
+**Components**:
+- Sticky AI suggestion card at top
+- Chat bubbles (yours: right/green, theirs: left/white)
+- Translation shown in smaller text below each message
+- AI suggestion bubbles (orange, between messages)
+- Input bar with text field, mic button, send button
 
-**Purpose:** User profiles, trust scores, and identity verification
+**Interactions**:
+- Tap mic → Record voice message → Auto-translate → Send
+- Type message → Tap send → Auto-translate → Send
+- Tap AI suggestion → Insert into input field
+- Messages auto-scroll to bottom
+- Pull down to see AI suggestion card
 
-**Key Components:**
-- `ProfileManager`: Vendor profile creation and management
-- `TrustScoreCalculator`: Calculates and updates trust scores
-- `IdentityVerifier`: Government ID and business registration verification
-- `TransactionRecorder`: Records completed transactions for trust building
+### 4. Help Screen
 
-**Interfaces:**
-```typescript
-interface VendorService {
-  createVendorProfile(vendorData: VendorRegistration): Promise<VendorProfile>
-  updateTrustScore(vendorId: string, transactionRating: number): Promise<TrustScore>
-  verifyIdentity(vendorId: string, documents: IdentityDocument[]): Promise<VerificationResult>
-  getVendorProfile(vendorId: string): Promise<VendorProfile>
-}
+**Purpose**: Quick guide for using the app
 
-interface VendorProfile {
-  vendorId: string
-  name: string
-  location: string
-  specializations: string[]
-  trustScore: number
-  verificationStatus: 'pending' | 'verified' | 'rejected'
-  tradingHistory: TransactionSummary[]
-}
+**Layout**:
+```
+┌─────────────────────────────────┐
+│  ← Back          Help            │
+├─────────────────────────────────┤
+│                                 │
+│  🎤 Voice Commands              │
+│  ┌─────────────────────────┐   │
+│  │ "Onion price"           │   │ ← Example cards
+│  │ "Start negotiation"     │   │
+│  │ "Change language"       │   │
+│  └─────────────────────────┘   │
+│                                 │
+│  🌐 Languages                   │
+│  ┌─────────────────────────┐   │
+│  │ हिंदी  English  தமிழ்   │   │ ← Language grid
+│  │ తెలుగు  বাংলা  मराठी    │   │
+│  │ ગુજરાતી ಕನ್ನಡ മലയാളം    │   │
+│  │ ਪੰਜਾਬੀ                  │   │
+│  └─────────────────────────┘   │
+│                                 │
+│  💡 Tips                        │
+│  • Speak clearly                │
+│  • Use commodity names          │
+│  • Check prices before deal     │
+│                                 │
+│  📞 Demo Mode                   │
+│  This is a demo with sample     │
+│  data. No real transactions.    │
+│                                 │
+└─────────────────────────────────┘
 ```
 
-### 5. Real-time Communication Layer
+**Components**:
+- Voice command examples in cards
+- Language selector grid (all 10 languages)
+- Simple tips list
+- Demo mode disclaimer
 
-**Purpose:** WebSocket-based real-time messaging and notifications
+**Interactions**:
+- Tap language → Change app language → Return to home
+- Tap example command → Copy to home screen input
+- Scroll to see all content
 
-**Key Components:**
-- `WebSocketManager`: Manages WebSocket connections and routing
-- `MessageBroker`: Redis pub/sub for message distribution
-- `NotificationService`: Real-time alerts and updates
-- `SessionManager`: Manages active trading sessions
+## Component Architecture
 
-**Interfaces:**
+### Core Components
+
 ```typescript
-interface RealtimeService {
-  establishConnection(vendorId: string): Promise<WebSocketConnection>
-  broadcastMessage(sessionId: string, message: RealtimeMessage): void
-  sendNotification(vendorId: string, notification: Notification): void
-  subscribeToSession(vendorId: string, sessionId: string): void
-}
+// Main App Shell
+App.tsx
+├── LanguageProvider (Context)
+├── VoiceProvider (Context)
+└── Router
+    ├── HomeScreen
+    ├── PriceResultScreen
+    ├── NegotiationScreen
+    └── HelpScreen
 
-interface RealtimeMessage {
-  type: 'translation' | 'price_update' | 'negotiation' | 'alert'
-  sessionId: string
-  senderId: string
-  content: any
-  timestamp: Date
-}
+// Reusable Components
+components/
+├── VoiceMicButton.tsx          // Large circular mic with animation
+├── LanguageSelector.tsx        // Dropdown/modal for language selection
+├── PriceCard.tsx               // Display commodity price
+├── ChatBubble.tsx              // Message bubble with translation
+├── AISuggestionCard.tsx        // AI assistant suggestions
+├── QuickActionButton.tsx       // Large icon buttons
+└── Header.tsx                  // App header with back/language
+```
+
+### Services
+
+```typescript
+services/
+├── VoiceService.ts             // Web Speech API wrapper
+│   ├── startRecognition()
+│   ├── stopRecognition()
+│   ├── speak()
+│   └── getSupportedLanguages()
+│
+├── TranslationService.ts       // Translation logic
+│   ├── translate(text, from, to)
+│   ├── detectLanguage(text)
+│   └── SUPPORTED_LANGUAGES
+│
+├── PriceService.ts             // Mock price data
+│   ├── getPrice(commodity)
+│   ├── searchCommodity(query)
+│   └── SAMPLE_PRICES
+│
+└── NegotiationService.ts       // AI suggestions
+    ├── getSuggestion(context)
+    ├── evaluateOffer(price, market)
+    └── generateCounterOffer()
+```
+
+### Hooks
+
+```typescript
+hooks/
+├── useVoiceRecognition.ts      // Voice input hook
+│   └── Returns: { transcript, isListening, start, stop }
+│
+├── useSpeechSynthesis.ts       // Text-to-speech hook
+│   └── Returns: { speak, isSpeaking, cancel }
+│
+├── useTranslation.ts           // Translation hook
+│   └── Returns: { translate, currentLang, changeLang }
+│
+└── useLocalStorage.ts          // Persist preferences
+    └── Returns: { value, setValue }
 ```
 
 ## Data Models
 
-### Core Entities
+### Commodity Price
 
 ```typescript
-// Vendor Entity
-interface Vendor {
-  id: string
-  name: string
-  email: string
-  phone: string
-  preferredLanguage: string
-  location: {
-    state: string
-    district: string
-    market: string
-  }
-  businessDetails: {
-    registrationNumber?: string
-    gstNumber?: string
-    businessType: string
-  }
-  trustScore: number
-  verificationStatus: 'pending' | 'verified' | 'rejected'
-  createdAt: Date
-  updatedAt: Date
-}
-
-// Commodity Entity
-interface Commodity {
-  id: string
-  name: string
-  category: string
-  unit: string
-  qualityGrades: string[]
-  seasonality: {
-    peakMonths: number[]
-    offSeasonMonths: number[]
-  }
-  standardSpecs: Record<string, any>
-}
-
-// Market Data Entity
-interface MarketData {
-  id: string
-  commodityId: string
-  marketLocation: string
-  price: number
-  quantity: number
-  quality: string
-  timestamp: Date
-  source: string
-  reliability: number
-}
-
-// Transaction Entity
-interface Transaction {
-  id: string
-  buyerId: string
-  sellerId: string
-  commodityId: string
-  quantity: number
-  agreedPrice: number
-  qualitySpecs: Record<string, any>
-  negotiationSessionId: string
-  status: 'pending' | 'completed' | 'cancelled'
-  completedAt?: Date
-  ratings: {
-    buyerRating?: number
-    sellerRating?: number
-  }
-}
-
-// Translation Cache Entity
-interface TranslationCache {
-  id: string
-  sourceText: string
-  translatedText: string
-  fromLanguage: string
-  toLanguage: string
-  confidence: number
-  context: 'general' | 'commercial' | 'negotiation'
-  usageCount: number
-  lastUsed: Date
+interface CommodityPrice {
+  id: string;
+  name: string;              // "Onion"
+  nameLocal: string;         // "प्याज"
+  price: number;             // 40
+  unit: string;              // "kg" or "quintal"
+  market: string;            // "Delhi Azadpur Mandi"
+  timestamp: Date;
+  trend: 'up' | 'down' | 'stable';
+  changePercent: number;     // 5.0
+  icon: string;              // "🧅" or image URL
 }
 ```
 
-### Database Schema Design
-
-**PostgreSQL Tables:**
-- `vendors` - Vendor profiles and authentication
-- `commodities` - Commodity master data
-- `transactions` - Completed trade records
-- `trust_scores` - Trust score history and calculations
-- `verification_documents` - Identity verification records
-
-**Redis Data Structures:**
-- `translation_cache:{lang_pair}` - Hash for cached translations
-- `active_sessions:{vendor_id}` - Set of active negotiation sessions
-- `price_alerts:{vendor_id}` - List of price alert subscriptions
-- `websocket_connections` - Hash mapping vendor IDs to connection IDs
-
-**InfluxDB Measurements:**
-- `market_prices` - Time-series price data
-- `negotiation_metrics` - Negotiation success rates and timing
-- `platform_usage` - User activity and feature usage analytics
-
-## Error Handling
-
-### Error Categories and Strategies
-
-**1. Translation Errors**
-- Low confidence translations (< 85%) → Flag for manual review
-- API failures → Fallback to cached translations or alternative providers
-- Language detection failures → Default to English with user confirmation
-
-**2. Price Discovery Errors**
-- Market data unavailability → Use cached data with staleness warnings
-- ML model failures → Fallback to historical averages with reduced confidence
-- External API timeouts → Graceful degradation with limited functionality
-
-**3. Real-time Communication Errors**
-- WebSocket disconnections → Automatic reconnection with exponential backoff
-- Message delivery failures → Store and retry with acknowledgment system
-- Session state inconsistencies → Synchronization recovery protocols
-
-**4. Data Integrity Errors**
-- Transaction conflicts → Optimistic locking with conflict resolution
-- Trust score calculation errors → Recalculation with audit trails
-- Cache inconsistencies → Cache invalidation and refresh strategies
-
-### Error Response Format
+### Chat Message
 
 ```typescript
-interface ErrorResponse {
-  error: {
-    code: string
-    message: string
-    details?: any
-    timestamp: Date
-    requestId: string
-  }
-  fallback?: {
-    available: boolean
-    data?: any
-    limitations: string[]
+interface ChatMessage {
+  id: string;
+  sender: 'user' | 'vendor';
+  text: string;              // Translated text
+  originalText: string;      // Original language text
+  language: LanguageCode;
+  timestamp: Date;
+  isVoice: boolean;
+}
+```
+
+### AI Suggestion
+
+```typescript
+interface AISuggestion {
+  type: 'price' | 'counter' | 'accept' | 'reject';
+  message: string;           // "Market price is ₹40/kg"
+  action?: string;           // "Suggest: Start at ₹38"
+  confidence: number;        // 0.85
+}
+```
+
+### Language
+
+```typescript
+type LanguageCode = 'en' | 'hi' | 'ta' | 'te' | 'bn' | 
+                    'mr' | 'gu' | 'kn' | 'ml' | 'pa';
+
+interface Language {
+  code: LanguageCode;
+  name: string;              // "हिंदी"
+  nameEnglish: string;       // "Hindi"
+  voiceCode: string;         // "hi-IN" for Web Speech API
+}
+```
+
+## Sample Data Structure
+
+### Mock Prices (PriceService.ts)
+
+```typescript
+const SAMPLE_PRICES: CommodityPrice[] = [
+  {
+    id: 'onion',
+    name: 'Onion',
+    nameLocal: 'प्याज',
+    price: 40,
+    unit: 'kg',
+    market: 'Delhi Azadpur Mandi',
+    timestamp: new Date(),
+    trend: 'up',
+    changePercent: 5.0,
+    icon: '🧅'
+  },
+  {
+    id: 'tomato',
+    name: 'Tomato',
+    nameLocal: 'टमाटर',
+    price: 50,
+    unit: 'kg',
+    market: 'Mumbai Vashi Mandi',
+    timestamp: new Date(),
+    trend: 'down',
+    changePercent: -3.0,
+    icon: '🍅'
+  },
+  // ... more commodities
+];
+```
+
+## Voice Recognition Flow
+
+```
+User taps mic button
+    ↓
+Start Web Speech API recognition
+    ↓
+Show "Listening..." with pulsing animation
+    ↓
+User speaks: "Onion price"
+    ↓
+Recognition returns transcript
+    ↓
+Display transcript: "You said: Onion price"
+    ↓
+Parse command (extract: commodity="onion", action="price")
+    ↓
+Call PriceService.getPrice("onion")
+    ↓
+Navigate to PriceResultScreen with data
+    ↓
+Speak result using text-to-speech
+```
+
+## Translation Flow
+
+```
+User types message: "₹35 per kg?"
+    ↓
+Detect source language: Hindi
+    ↓
+Get recipient language: Tamil
+    ↓
+Call TranslationService.translate("₹35 per kg?", "hi", "ta")
+    ↓
+Receive translation: "₹35 கிலோவுக்கு?"
+    ↓
+Display both versions in chat bubble:
+  - Original (small): "₹35 per kg?"
+  - Translated (large): "₹35 கிலோவுக்கு?"
+    ↓
+Send to recipient
+```
+
+## Negotiation AI Logic
+
+```typescript
+function getSuggestion(context: NegotiationContext): AISuggestion {
+  const { commodity, marketPrice, currentOffer, history } = context;
+  
+  // Simple rule-based logic for MVP
+  const difference = ((currentOffer - marketPrice) / marketPrice) * 100;
+  
+  if (difference < -10) {
+    return {
+      type: 'counter',
+      message: `Offer is ${Math.abs(difference)}% below market`,
+      action: `Suggest: Counter with ₹${marketPrice * 0.95}`,
+      confidence: 0.8
+    };
+  } else if (difference > 10) {
+    return {
+      type: 'reject',
+      message: `Offer is ${difference}% above market`,
+      action: 'Suggest: Reject and offer market price',
+      confidence: 0.9
+    };
+  } else {
+    return {
+      type: 'accept',
+      message: 'Offer is close to market price',
+      action: 'Suggest: Accept or counter slightly',
+      confidence: 0.85
+    };
   }
 }
 ```
+
+## Responsive Breakpoints
+
+```typescript
+// Mobile First
+xs: 0px      // Small phones (320px+)
+sm: 600px    // Large phones
+md: 960px    // Tablets
+lg: 1280px   // Desktop (optional for this MVP)
+
+// Component sizing
+Mobile (xs-sm):
+  - Mic button: 120px diameter
+  - Quick actions: 80px x 80px
+  - Font sizes: 18px body, 48px price
+  - Padding: 16px
+
+Tablet (md+):
+  - Mic button: 150px diameter
+  - Quick actions: 100px x 100px
+  - Font sizes: 20px body, 56px price
+  - Padding: 24px
+```
+
+## Accessibility Features
+
+1. **High Contrast**: Dark green text on light backgrounds
+2. **Large Touch Targets**: Minimum 48px (WCAG AAA)
+3. **Voice Feedback**: Speak all important actions
+4. **Visual Feedback**: Animations for voice recognition
+5. **Icon + Text**: Never rely on icons alone
+6. **Simple Language**: Avoid technical jargon
+
+## Performance Targets
+
+- **Initial Load**: < 3 seconds on 3G
+- **Voice Recognition Start**: < 500ms
+- **Translation**: < 2 seconds
+- **Screen Transitions**: < 300ms (smooth animations)
+- **Text-to-Speech Start**: < 500ms
+
+## Browser Compatibility
+
+**Required**:
+- Chrome 80+ (Android/Desktop)
+- Safari 14+ (iOS)
+- Firefox 90+ (Android/Desktop)
+
+**Web Speech API Support**:
+- Chrome: Full support
+- Safari: Partial (recognition may need fallback)
+- Firefox: Partial (may need polyfill)
+
+**Fallback Strategy**:
+- If voice not supported → Show text input only
+- If translation API fails → Show original text
+- If localStorage not available → Use session state
 
 ## Testing Strategy
 
-### Dual Testing Approach
+### Unit Tests
+- Voice service functions
+- Translation service
+- Price lookup logic
+- AI suggestion algorithm
 
-The platform will employ both unit testing and property-based testing to ensure comprehensive coverage:
+### Property-Based Tests (fast-check)
+- Translation preserves numbers
+- Price calculations are accurate
+- Language codes are valid
+- Message ordering in chat
 
-**Unit Tests:**
-- Focus on specific examples, edge cases, and error conditions
-- Test integration points between microservices
-- Validate API contracts and data transformations
-- Cover authentication and authorization flows
+### Manual Testing
+- Voice recognition in each language
+- UI on different screen sizes
+- Touch interactions on mobile
+- Text-to-speech quality
 
-**Property-Based Tests:**
-- Verify universal properties across all inputs using randomized test data
-- Validate business rules and invariants
-- Test system behavior under various load conditions
-- Ensure data consistency across distributed services
+## Deployment
 
-**Testing Configuration:**
-- Property-based tests will run minimum 100 iterations per test
-- Each property test will be tagged with: **Feature: multilingual-mandi-platform, Property {number}: {property_text}**
-- Tests will use Jest for unit testing and fast-check for property-based testing
-- Integration tests will use Docker Compose for service orchestration
+**Hosting**: Static hosting (Vercel, Netlify, GitHub Pages)
+**Build**: `npm run build` → Static files
+**Environment**: No backend required
+**Configuration**: Environment variables for API keys (if using real translation API)
 
-**Test Categories:**
-1. **API Contract Tests** - Ensure service interfaces remain stable
-2. **Translation Accuracy Tests** - Validate translation quality and context preservation
-3. **Price Discovery Tests** - Verify ML model predictions and market data processing
-4. **Real-time Communication Tests** - Test WebSocket reliability and message delivery
-5. **Security Tests** - Validate authentication, authorization, and data protection
-6. **Performance Tests** - Ensure system meets latency and throughput requirements
+## Future Enhancements (Post-MVP)
+
+- Offline mode with service workers
+- Real-time vendor matching
+- Photo upload for commodity quality
+- Location-based market selection
+- Push notifications for price alerts
+- Progressive Web App (PWA) installation
 
 ## Correctness Properties
 
-*A property is a characteristic or behavior that should hold true across all valid executions of a system—essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
+### Property 1: Translation Bidirectionality
+**Validates: Requirement 1.3, 1.4**
 
-### Property 1: Translation Performance and Quality
-*For any* message in a supported Indian language, translation to any other supported language should complete within 2 seconds and preserve commercial terminology with 85% or higher confidence, flagging lower confidence translations for review.
-**Validates: Requirements 1.1, 1.2, 1.5**
+For any text T and languages L1, L2:
+- translate(translate(T, L1, L2), L2, L1) should preserve meaning
+- Numbers and prices must remain unchanged
 
-### Property 2: UI Localization Consistency
-*For any* supported language selection, all interface elements should be displayed in that language with proper formatting and cultural context.
-**Validates: Requirements 1.4**
+### Property 2: Price Consistency
+**Validates: Requirement 3.2, 3.3**
 
-### Property 3: Price Discovery Performance and Accuracy
-*For any* commodity type, quantity, and vendor location, price recommendations should be generated within 3 seconds and incorporate current market trends, seasonal variations, regional demand, vendor location, commodity quality, and historical data.
-**Validates: Requirements 2.1, 2.2, 2.3**
+For any commodity C:
+- getPrice(C).price > 0
+- getPrice(C).unit in ['kg', 'quintal']
+- getPrice(C).trend in ['up', 'down', 'stable']
 
-### Property 4: Market Data Freshness
-*For any* commodity with active market data, price recommendations should update every 15 minutes, and price displays should refresh within 30 seconds of market data updates.
-**Validates: Requirements 2.4, 4.2**
+### Property 3: Voice Recognition Accuracy
+**Validates: Requirement 2.3**
 
-### Property 5: Volatility Alert System
-*For any* commodity experiencing market volatility exceeding 10% in an hour, relevant vendors should receive alerts automatically.
-**Validates: Requirements 2.5**
+For any voice input V in language L:
+- Recognition time < 2 seconds
+- Transcript should be non-empty
+- Language should match selected language
 
-### Property 6: Negotiation AI Assistance
-*For any* negotiation session, the assistant should analyze both parties' historical patterns, provide real-time counter-offer suggestions based on market conditions, evaluate offers against current rates, and suggest compromise solutions when negotiations stall.
-**Validates: Requirements 3.1, 3.2, 3.3, 3.5**
+### Property 4: AI Suggestion Validity
+**Validates: Requirement 4.2, 4.3**
 
-### Property 7: AI Learning and Improvement
-*For any* completed negotiation, the system should track patterns and incorporate learnings to improve future suggestions, demonstrating measurable improvement over time.
-**Validates: Requirements 3.4**
+For any negotiation context:
+- Suggestion price should be within ±20% of market price
+- Confidence score should be between 0 and 1
+- Suggestion type should be valid enum value
 
-### Property 8: Market Data Completeness
-*For any* commodity search, the platform should display current prices, trends, and demand indicators from real-time market data aggregated from multiple sources.
-**Validates: Requirements 4.1, 4.4**
+### Property 5: UI Responsiveness
+**Validates: Requirement 5.4**
 
-### Property 9: Historical Data Availability
-*For any* commodity with sufficient trading history, 30-day historical price charts should be available and accurate.
-**Validates: Requirements 4.3**
+For any screen width W where 320 <= W <= 1920:
+- All interactive elements should be visible
+- Touch targets should be >= 48px
+- Text should be readable (font size >= 14px)
 
-### Property 10: Trust System Integrity
-*For any* completed trade, both parties should be able to rate the transaction, trust scores should be calculated based on transaction history and ratings, and profiles should display trust scores, trading volume, and specializations accurately.
-**Validates: Requirements 5.1, 5.2, 5.3**
+### Property 6: Message Ordering
+**Validates: Requirement 6.2**
 
-### Property 11: Identity Verification Process
-*For any* vendor registration, identity verification should work correctly with valid government ID and business registration documents.
-**Validates: Requirements 5.4**
-
-### Property 12: Trust Score Monitoring
-*For any* vendor whose trust score falls below 3.0 out of 5.0, their profile should be automatically flagged for review.
-**Validates: Requirements 5.5**
-
-### Property 13: Responsive Design Compatibility
-*For any* screen size between 320px and 1920px width, the platform should render correctly with touch-optimized controls on mobile devices.
-**Validates: Requirements 6.1, 6.2**
-
-### Property 14: Performance Under Network Constraints
-*For any* 3G network connection, the platform should load completely within 5 seconds and support voice input for searches on mobile devices.
-**Validates: Requirements 6.3, 6.4**
-
-### Property 15: Offline Functionality
-*For any* basic function like viewing saved negotiations and price history, the platform should work without network connectivity.
-**Validates: Requirements 6.5**
-
-### Property 16: Transaction Recording Completeness
-*For any* completed trade, all transaction details including commodity, quantity, price, and parties should be automatically recorded with complete accuracy.
-**Validates: Requirements 7.1**
-
-### Property 17: Analytics and Reporting Generation
-*For any* vendor with transaction history, the platform should generate accurate weekly/monthly reports and provide insights on profitable commodities and trading partners while protecting sensitive information.
-**Validates: Requirements 7.2, 7.3, 7.5**
-
-### Property 18: Data Retention Compliance
-*For any* transaction record, data should be maintained for at least 2 years for audit and analysis purposes.
-**Validates: Requirements 7.4**
-
-### Property 19: Security and Encryption Standards
-*For any* data transmission and storage, the platform should use TLS 1.3+ for transmission and AES-256 for sensitive data storage, with multi-factor authentication required for all vendor accounts.
-**Validates: Requirements 8.1, 8.2, 8.3**
-
-### Property 20: Data Privacy and Deletion
-*For any* vendor account deletion request, all personal data should be removed within 30 days while preserving anonymized transaction records, and users should have control over their data sharing preferences in compliance with Indian data protection regulations.
-**Validates: Requirements 8.4, 8.5**
+For any chat conversation:
+- Messages should be ordered by timestamp
+- Each message should have unique ID
+- Translation should preserve message order
